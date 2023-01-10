@@ -13,6 +13,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.domain.jaxb.SpringDataJaxb.PageDto;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -56,10 +58,11 @@ public class TopicosController {
 	
 	@GetMapping("/listar-topicos-page")
 	public Page<TopicoDto> listarTopicosPage( @RequestParam(required = false) String nomeCurso, 
-											  @RequestParam int page,
+											  @RequestParam int pagina,
 											  @RequestParam int qtd,
 											  @RequestParam(required = false) String ordenacao){
-		Pageable pageable = PageRequest.of(page, qtd, Direction.DESC, ordenacao);
+		Pageable pageable = PageRequest.of(pagina, qtd, Direction.DESC, ordenacao);
+		//Forma mais manual, onde é necessario que o cliente, mande todos os parametros para a paginacao
 		if (nomeCurso == null) {
 			Page<Topico> listarTodos = topicoRepository.findAll(pageable);
 			Page<TopicoDto> responseTopicos = TopicoDto.pageToPageDto(listarTodos);
@@ -70,6 +73,19 @@ public class TopicosController {
 		return TopicoDto.pageToPageDto(cursosPorTopico);
 	}
 	
+	@GetMapping("/listar-topicos-page-melhor-forma")
+	public Page<TopicoDto> listarTopicosPageMelhorForma(@RequestParam(required = false) String nomeCurso,
+			@PageableDefault(direction = Direction.DESC,page = 0,size = 5,sort = "id") Pageable pageable){
+			//Caso os cliente não envie informacoes referentes a paginacao, o pagebleDeafult se encarrega disso.
+		if (nomeCurso == null) {
+			Page<Topico> listarTodos = topicoRepository.findAll(pageable);
+			Page<TopicoDto> responseTopicos = TopicoDto.pageToPageDto(listarTodos);
+			 return responseTopicos;
+		}
+		
+		Page<Topico> cursosPorTopico = topicoRepository.PageTopicosPorCurso(nomeCurso, pageable);
+		return TopicoDto.pageToPageDto(cursosPorTopico);
+	}
 	
 	@GetMapping("/listar-topicos-curso")
 	public Set<TopicoDto> listarSet(@RequestParam String nomeCurso){
