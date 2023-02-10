@@ -1,6 +1,7 @@
 package br.com.alura.forum.controller;
 
 import java.net.URI;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -9,11 +10,13 @@ import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.domain.jaxb.SpringDataJaxb.PageDto;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -45,11 +48,18 @@ public class TopicosController {
 	@Autowired
 	private CursoRepository cursoRepository;
 	
+	@Autowired
+	CacheManager cacheManager;
+	
 	@GetMapping("/topicos-curso")
+	@Cacheable(value = "listaDeTopicos")
 	public List<TopicoDto> lista(String nomeCurso) {
 		if (nomeCurso == null) {
+			
 			List<Topico> topicos = topicoRepository.findAll();
+			System.err.println("Chamou do banco");
 			return TopicoDto.converter(topicos);
+			
 		} else {
 			List<Topico> topicos = topicoRepository.findByCursoNome(nomeCurso);
 			return TopicoDto.converter(topicos);
@@ -74,6 +84,7 @@ public class TopicosController {
 	}
 	
 	@GetMapping("/listar-topicos-page-melhor-forma")
+	@Cacheable(value = "pageDeTopicos")
 	public Page<TopicoDto> listarTopicosPageMelhorForma(@RequestParam(required = false) String nomeCurso,
 			@PageableDefault(direction = Direction.DESC,page = 0,size = 5,sort = "id") Pageable pageable){
 			//Caso os cliente não envie informacoes referentes a paginacao, o pagebleDeafult se encarrega disso.
@@ -104,16 +115,29 @@ public class TopicosController {
 	}
 	
 	
+	
 	@PostMapping
 	@Transactional
 	public ResponseEntity<TopicoDto> cadastrar(@RequestBody @Valid TopicoForm form, UriComponentsBuilder uriBuilder) {
+		//apaga o cache atribuido na lista
+		List<String> listCache = Arrays.asList("pageDeTopicos","listaDeTopicos");
+		listCache.forEach(cache -> cacheManager.getCache(cache).clear());
+		
+		
+		
+		
 		Topico topico = form.converter(cursoRepository);
 		topicoRepository.save(topico);
-		
 		URI uri = uriBuilder.path("/topicos/{id}").buildAndExpand(topico.getId()).toUri();
 		return ResponseEntity.created(uri).body(new TopicoDto(topico));
+		
 	}
 	
+	@CacheEvict(value = "listaDeTopicos", allEntries = true)
+	private void limpaCacheListaDeTopicos() {}
+	@CacheEvict(value = "pageDeTopicos",allEntries = true)
+	private void limpaCachePageDeTopicos() {}
+
 	@GetMapping("/{id}")
 	public ResponseEntity<DetalhesDoTopicoDto> detalhar(@PathVariable Long id) {
 		Optional<Topico> topico = topicoRepository.findById(id);

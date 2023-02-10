@@ -1,16 +1,19 @@
 package br.com.alura.forum.controller.dto;
 
+import java.io.Serializable;
+
 import javax.validation.constraints.NotBlank;
 
 import br.com.alura.forum.modelo.Curso;
 
-public class CursoDto {
+public class CursoDto implements Serializable {
 
 	private Long id;
-	@NotBlank()//Não deixa valores brancos ou nulos
-	private String categoria;
 	@NotBlank()
 	private String nome;
+	@NotBlank()//Não deixa valores brancos ou nulos
+	private String categoria;
+	
 	
 	
 	
@@ -20,11 +23,11 @@ public class CursoDto {
 	
 	public Curso  DtoToCurso() {
 		
-		Curso curso = new Curso(id, categoria, nome);
+		Curso curso = new Curso(id, nome, categoria);
 		return curso;
 	}
 
-	public CursoDto(Long id, String categoria, String nome) {
+	public CursoDto(Long id,  String nome, String categoria) {
 		super();
 		this.id = id;
 		this.categoria = categoria;

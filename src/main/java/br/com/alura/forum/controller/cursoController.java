@@ -64,20 +64,20 @@ public class cursoController {
 	}
 	
 	@GetMapping("/listar-cursos")
-	public Set<TopicoDto> listarSet( String nomeCurso){
-		if (nomeCurso == null) {
-			List<Topico> listarTodos = topicoRepository.findAll();
-			Set<TopicoDto> setTopicos = TopicoDto.converterToSet(listarTodos);
-			 return setTopicos;
-		}
-		Set<Topico> cursosPorNome = topicoRepository.listarTopicosPorCurso(nomeCurso);
-		return TopicoDto.converter(cursosPorNome);
+	public Set<Curso> listarSet(){
+		
+			Set<Curso> listarTodos = cursoRepository.listarCurso();
+			
+			 return listarTodos;
+		
+		
 	}
 	
 	
 	
 	@PostMapping("/cadastrar")
 	@Transactional
+	@CacheEvict(value = "listaCurso",allEntries = true)
 	public ResponseEntity<Curso> cadastrar(@RequestBody @Valid CursoDto dto, UriComponentsBuilder uriBuilder) {
 		
 		Curso cursoEntity = dto.DtoToCurso();

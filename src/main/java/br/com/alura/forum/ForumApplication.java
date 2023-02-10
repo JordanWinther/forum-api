@@ -7,7 +7,6 @@ import org.springframework.data.web.config.EnableSpringDataWebSupport;
 
 @SpringBootApplication
 @EnableCaching
-@EnableSpringDataWebSupport
 public class ForumApplication {
 
 	public static void main(String[] args) {

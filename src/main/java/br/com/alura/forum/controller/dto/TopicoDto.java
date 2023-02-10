@@ -1,5 +1,6 @@
 package br.com.alura.forum.controller.dto;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
@@ -9,8 +10,13 @@ import org.springframework.data.domain.Page;
 
 import br.com.alura.forum.modelo.Topico;
 
-public class TopicoDto {
+public class TopicoDto implements Serializable{
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	
 	private Long id;
 	private String titulo;
 	private String mensagem;
